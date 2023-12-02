@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -18,61 +19,10 @@ func main() {
 	fileScanner.Split(bufio.ScanLines)
 
 	sum := 0
-	twoDigitNumbers := make([]int, 0)
-	firstNumberIndex := 0
 
 	for fileScanner.Scan() {
 		str := fileScanner.Text()
-		twoDigitNumber := ""
-
-		for i, char := range str {
-
-			if isDigit(char) {
-				if len(twoDigitNumber) == 0 {
-					twoDigitNumber = string(char)
-					firstNumberIndex = i
-				}
-				println("Primeiro: " + twoDigitNumber)
-				break
-			}
-		}
-
-		for i := len(str) - 1; i >= 0; i-- {
-
-			if i <= firstNumberIndex {
-				twoDigitNumber = twoDigitNumber + string(str[firstNumberIndex])
-				println("Segundo: " + twoDigitNumber)
-
-				digit, err := strconv.Atoi(twoDigitNumber)
-				if err != nil {
-					fmt.Println(err)
-				}
-				fmt.Printf("twoDigit int: %d \n", digit)
-				twoDigitNumbers = append(twoDigitNumbers, digit)
-
-				break
-			}
-
-			if isDigit(rune(str[i])) {
-				twoDigitNumber = twoDigitNumber + string(str[i])
-				println("Segundo: " + twoDigitNumber)
-
-				digit, err := strconv.Atoi(twoDigitNumber)
-				if err != nil {
-					fmt.Println(err)
-				}
-				fmt.Printf("twoDigit int: %d \n", digit)
-				twoDigitNumbers = append(twoDigitNumbers, digit)
-
-				break
-			}
-
-		}
-
-	}
-
-	for _, digit := range twoDigitNumbers {
-		sum = sum + digit
+		convertSpelledNumbers(str, &sum)
 	}
 
 	println(sum)
@@ -83,4 +33,68 @@ func main() {
 // Helper function to check if a character is a digit
 func isDigit(char rune) bool {
 	return char >= '0' && char <= '9'
+}
+
+func convertSpelledNumbers(str string, sum *int) {
+	spelledNumbers := map[string]string{
+		"one":   "1",
+		"two":   "2",
+		"three": "3",
+		"four":  "4",
+		"five":  "5",
+		"six":   "6",
+		"seven": "7",
+		"eight": "8",
+		"nine":  "9",
+	}
+
+	minPos := len(str)
+	maxPos := 0
+
+	var firstDigitAtLeft string
+	var lastDigitAtRight string
+
+	for k, v := range spelledNumbers {
+		idx := strings.Index(str, k)
+
+		lastIdx := strings.LastIndex(str, k)
+
+		if idx != -1 && minPos > idx {
+			minPos = idx
+			firstDigitAtLeft = v
+		}
+
+		if lastIdx != -1 && maxPos < lastIdx {
+			maxPos = lastIdx
+			lastDigitAtRight = v
+		}
+
+	}
+
+	beforeFistPos := str[:minPos]
+
+	for _, char := range beforeFistPos {
+		if isDigit(rune(char)) {
+			firstDigitAtLeft = string(char)
+			break
+		}
+	}
+
+	afterLastPos := str[maxPos:]
+
+	for _, char := range afterLastPos {
+		if isDigit(rune(char)) {
+			lastDigitAtRight = string(char)
+		}
+	}
+
+	twoDigit := firstDigitAtLeft + lastDigitAtRight
+
+	digit, err := strconv.Atoi(twoDigit)
+
+	if err != nil {
+		println(err)
+	}
+
+	*sum += digit
 }
